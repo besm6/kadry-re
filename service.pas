@@ -12,7 +12,7 @@ c26=26;lt='<';star='*';c39=39;c44=44;c47=47;c37=37;
 colon=':';semi=';';
 c214=214;c232=232;c264=264;c296=296;c308=308;c510=510;
 c800=800;c832=832;c914=914;c924=924;c934=934;c942=942;
-val='ВАЛЕТ ';sh='Ш';etx='{377';
+valet='ВАЛЕТ ';sh='Ш';etx='{377';
 sp=' ';c81=81;spaces='      ';stars='******';ornament='-=#=- ';
 kadry='!КАДРЫ';catalog='КАТАЛО';zonkd='!ЗОНКД';zonpch='!ЗОНПЧ';
 c60=60;
@@ -36,16 +36,16 @@ g2062z:bitset;
 g2063z, g2064z,
 ЗАПРЕТ:boolean;
 debug:boolean;
-g2067z:boolean;
+batch:boolean;
 g2068z, g2069z,
-g2070z:boolean;
+hasErr:boolean;
 g2071z:boolean;
 tokLen:integer;
 tokPos, g2074z, tokRem:integer;
 g2076z,myZlen:integer;
-myDBVol,myDBZone, ankNum, g2081z:integer;
+myDBVol,myDBZone, ankNum, workMode:integer;
 g2082z, g2083z, g2084z:integer;
-g2085z, g2086z, g2087z:@arr;
+mainPtr, curPtr, otherPtr:@arr;
 pg32ptr:@page;
 g2089z, begTime, g2091v:integer;
 item:_array [1..17] _of integer;
@@ -365,7 +365,7 @@ _label 1;
 _var v1, v2: integer;
 _(
   g2071z := false;
-  _if g2067z _then L1270 _else _(
+  _if batch _then L1270 _else _(
   _case level _of
   0: BIND;
   1: BIND(' ==С {172');
@@ -420,16 +420,16 @@ _(
  _);
 _);
 
-_function L1514(txt:integer;  l2a2z:char):integer;
+_function push6(txt:integer;  l2a2z:char):integer;
 _(
  _if (l2a2z >= 'D') _then _(
    writeln(l2a2z:1, ' ВВОДИТЬ НЕЛЬЗЯ');
-   g2070z := true;
+   hasErr := true;
    EXIT;
    (q) _exit q; 
  _);
   code(2СЧ4=СД/-6/,2ЛС5=);
-  L1514 := ;
+  push6 := ;
 _);
 
 _function myins(l2a1z, l2a2z, l2a3z, l2a4z:integer):integer;
@@ -489,19 +489,19 @@ _);
  _(
  initAnk;
  g2069z := true;
- g2070z := ;
- _if (g2081z = (0)) _or (g11z = 'КЛЮЧ') _then _(
+ hasErr := ;
+ _if (workMode = (0)) _or (g11z = 'КЛЮЧ') _then _(
     ГГ(g11z); write('=<ОШИБКА>');
     TTOUT;
     g11z := '000000'
  _);
- _if _not (g2081z <> (0)) _then  _GOTO 6334;
+ _if workMode = 0 _then  _GOTO 6334;
  _);
 
 _proced symErr(l2a1z:char);
  _(
    writeln('ОШИБКА ЗНАКА: ', l2a1z:1);
-   g2070z := true;
+   hasErr := true;
    (q) exit
  _);
 
@@ -525,8 +525,8 @@ _var l2v1z:char; l2v2z:integer;
    l2v1z := INP@;
  _if (ord(l2v1z) >= base) _then _(
    writeln('ОШИБКА В ЧИСЛЕ');
-   g2070z := true;
-   _if g2067z _then  EXIT _else  _GOTO 6334;
+   hasErr := true;
+   _if batch _then  EXIT _else  _GOTO 6334;
  _);
  (*=m+*) l2v2z := (l2v2z * base) + ord(l2v1z);
  get(INP);
@@ -563,16 +563,16 @@ _proced initCmd;
  'ДОЛ', 'ЗАР', 'СОС', 'ВОИ', 'СТР', 'БРО']
  _);
 
-_function L2065(l2a1z:integer):integer;
+_function getField(l2a1z:integer):integer;
 _var l2v1z:boolean;
 _(
- _if (g2081z <> (2)) _then _(
-   _if (l2a1z >= 25) _then error _else L2065 := (l2a1z + (1))
+ _if (workMode <> (2)) _then _(
+   _if (l2a1z >= 25) _then error _else getField := (l2a1z + (1))
   _) _else _(
  initCmd;
  l2v1z :=   getAlfa( g12z, (3) );
  g11z := 'КЛЮЧ';
- L2065 :=   fieldNum( 25 );
+ getField :=   fieldNum( 25 );
  g11z := '000000';
  _if (INP@ = eq) _then get(INP) _else symErr( '=' );
   _)
@@ -594,20 +594,20 @@ _proced L2134;
   _if _not (INP@ _in digit) _then _(
     l2v1z := (0);
     writeln('ОШИБКА В ДАТЕ');
-    g2070z := true;
+    hasErr := true;
     _GOTO 2205;
    _)
  _);
 
 _(
  L2134;
- l2v1z :=   getNum(10);
+ l2v1z := getNum(10);
  L2134;
- l2v1z := ((  getNum(10) * (100)) + l2v1z);
+ l2v1z := getNum(10) * 100 + l2v1z;
  L2134;
- l2v2z :=   getNum( 10 );
- _if _not (l2v2z <= (100)) _then  l2v2z := (l2v2z _MOD (100));
- l2v1z := ((l2v2z * (10000)) + l2v1z);
+ l2v2z :=   getNum(10);
+ _if l2v2z > 100 _then  l2v2z := l2v2z _MOD 100;
+ l2v1z := l2v2z * 10000 + l2v1z;
  2205:
  getDate := l2v1z;
 _);
@@ -615,10 +615,10 @@ _);
 _function L2207:integer;
 _var l2v1z:integer;
 _(
- _if nyet _then  l2v1z := (0) _else _(
- l2v1z :=   getNum( 10 );
- _if _not (l2v1z <= (100)) _then  l2v1z := (l2v1z _MOD (100));
- _if _not (l2v1z <= (100)) _then  g2070z := true;
+ _if nyet _then  l2v1z := 0 _else _(
+   l2v1z :=   getNum(10);
+   _if l2v1z > 100 _then  l2v1z := l2v1z _MOD 100;
+   _if l2v1z > 100 _then  hasErr := true;
   _);
   L2207 := l2v1z;
 _);
@@ -634,8 +634,8 @@ _(
   a1 := listB[off + 1].a;
  cnt := ;
  a1 := stars;
- unpck(u[1],  a1 );
- unpck(u[7],  a1 );
+ unpck(u[1],  a1);
+ unpck(u[7],  a1);
  fillToken;
  k := (0);
  _repeat 
@@ -653,7 +653,7 @@ _(
  pck(u[1], a1);
  pck(u[7], a2);
  k := off + 2;
- _for i := 0 _to cnt - 1 _do _(;
+ _for i := 0 _to cnt - 1 _do _(
    l2v5z := i * 2;
   _if (listB[k + l2v5z].a = a1) & 
   (listB[k + l2v5z + 1].a = a2) _then _(
@@ -704,13 +704,13 @@ _var l2v1z, l2v2z:integer;
 _(
  l2v1z :=   findToken( (308) );
  l2v2z :=   getNum( 10 );
- _if _not (l2v2z <= (127)) _then  error;
+ _if l2v2z > 127 _then  error;
  l2v1z := ((l2v1z * 16384) + (l2v2z * (128)));
  _if (INP@ = '-') _then _(
    get(INP);
    l2v2z :=   getNum( 10 );
-   _if _not (l2v2z <= (177)) _then  error;
-   l2v1z := (l2v1z + l2v2z);
+   _if l2v2z > 177 _then  error;
+   l2v1z := l2v1z + l2v2z;
   _);
  L2375 := l2v1z;
  _);
@@ -755,7 +755,7 @@ _(
     _select
       (l2v3z = 'Д'): l2v1z := (1);
       (l2v3z = 'О') _or (l2v3z = 'З'): l2v1z := (2);
-      true:  g2070z := true
+      true:  hasErr := true
     _end
    _);
  _);
@@ -775,20 +775,20 @@ _(
     _if (getAlfa( l2v4z, (1))) & (l2v4z = 'Т') _then  l2v1z := (4);
   _);
   (l2v4z = 'Т'): l2v1z := (4);
-  true: g2070z := true
+  true: hasErr := true
   _end;
   _);
  l2v3z :=   getNum( 10 );
  _if (INP@ = '.') _then _(
- _if (l2v1z <> (4)) _then  g2070z := true
+ _if (l2v1z <> (4)) _then  hasErr := true
   _else _(
     get(INP);
     l2v3z := ((l2v3z * 10) +   getNum(10) ) _)
   _) _else _(
-   _if _not (l2v1z <> (4)) _then  g2070z := true;
+   _if _not (l2v1z <> (4)) _then  hasErr := true;
   _);
  l2v3z := (l2v3z * (512));
- _if (l2v3z = (0)) _then  g2070z := true;
+ _if (l2v3z = (0)) _then  hasErr := true;
  _select
   (INP@ = chr(28)): _(
    get(INP);
@@ -801,7 +801,7 @@ _(
    _if (INP@ = chr(86)) _then _(
      get(INP);
      _if  (l2v1z = (0)) _then  l2v1z := (3);
-    _) _else _if (l2v1z <> (0)) _then  g2070z := true _else  l2v1z := (2);
+    _) _else _if (l2v1z <> (0)) _then  hasErr := true _else  l2v1z := (2);
     skipsp;
     _if (INP@ = chr(28)) _then _(
        get(INP);
@@ -811,14 +811,14 @@ _(
   ord(INP@) _IN g2062z: _(
     _if _not (l2v1z <> (0)) _then  l2v1z := (1);
   _);
-  true:  g2070z := true
+  true:  hasErr := true
   _end;
  L2533 := ((((l2v2z * (8)) + l2v1z) * 10000000B) + l2v3z);
  _);
 
 _function L2700(l2a1z, l2a2z, l2a3z:integer):integer;
 _(
-  L2700 :=   mysel(g2085z@[l2a1z].i, l2a2z, l2a3z );
+  L2700 :=   mysel(mainPtr@[l2a1z].i, l2a2z, l2a3z );
 _);
 
  (*=m-*)
@@ -834,9 +834,9 @@ _(
  k := (0);
  _for cur := start _to last _do _(
    _if annex = 0 _then 
-  l3v1z := g2085z@[cur].i
+  l3v1z := mainPtr@[cur].i
    _else
-  l3v1z := g2087z@[cur].i;
+  l3v1z := otherPtr@[cur].i;
    l3v1z := l3v1z;
    l3v7z := ;
  _if l3v7z = allones _then  _GOTO 3053;
@@ -870,7 +870,7 @@ _( (* find *)
   _) _else _(
    l2v1z := l2v1z;
    g12z := ;
-  _if _not (g12z = g2086z@[1].a) _then  EXIT;
+  _if _not (g12z = curPtr@[1].a) _then  EXIT;
   _);
   _);
  _if (hasFam) _then  compare( (1), (3), famLen );
@@ -887,18 +887,18 @@ _var l2v1z:integer;
 _(
  code(Э050114=,);
  l2v1z := ;
- today := (((((((((((shift(l2v1z,16) _mod 16) * 10) + (shift(l2v1z,20) _mod 16)) * 10) +
-  (shift(l2v1z, 28) _mod 2)) * 10) + (shift(l2v1z, 24) _mod 16)) * 10) +
-  (shift(l2v1z, 33) _mod 4)) * 10) + (shift(l2v1z, 29) _mod 16));
+ today := ((((sel(l2v1z,16, 4) * 10 + sel(l2v1z,20, 4)) * 10 +
+  sel(l2v1z, 28, 1)) * 10 + sel(l2v1z, 24, 4)) * 10 +
+  sel(l2v1z, 33, 2)) * 10 + sel(l2v1z, 29, 4);
  _);
 (*=m+*)
  _proced wrDec(l2a1z:integer);
 _var l2v1z, l2v2z, l2v3z:integer;
 _(
- l2v3z := (1000);
- _for l2v1z := (1) _to 4 _do _(;
+ l2v3z := 1000;
+ _for l2v1z := 1 _to 4 _do _(;
    l2v2z := trunc(l2a1z / l2v3z);
-   l2a1z := (l2a1z - (l2v2z * l2v3z));
+   l2a1z := l2a1z - l2v2z * l2v3z;
    l2v3z := trunc(l2v3z / 10);
    write(l2v2z:1);
  _);
@@ -963,8 +963,8 @@ _(
  _if (myZlen < l2v4z) _then l2v5z := (0) _else  l2v5z := (1);
  _for l2v1z := l2v6z _to l2v7z _do _for l2v2z := (0) _to 3 _do _(
    l2v3z := ((12 * l2v2z) + (1));
-   _if (mysel( g2086z@[l2v1z].i, (l2v3z + 10), l2v3z) = myDBZone) _then _(
-     g2086z@[l2v1z].i := myins( g2086z@[l2v1z].i, l2v5z, (l2v3z + 11), (l2v3z + 11));
+   _if (mysel( curPtr@[l2v1z].i, (l2v3z + 10), l2v3z) = myDBZone) _then _(
+     curPtr@[l2v1z].i := myins( curPtr@[l2v1z].i, l2v5z, (l2v3z + 11), (l2v3z + 11));
      EXIT;
    _)
  _);
@@ -1167,7 +1167,7 @@ _proced wr7pck;
 _var i:integer;
 _(
  _for i := 1 _to 7 _do _(
-   wrPacked(g2085z@[i].i);
+   wrPacked(mainPtr@[i].i);
   _if (i = 3)_or (i = 5) _then write( sp:1 ); (q) _exit q;
  _);
  writeLN;
@@ -1181,14 +1181,14 @@ _(
  rdDB;
  g2069z := false;
  _case l2a1z _of 
-1: g2086z := ref(l2v4z@[4 + 10 * g2076z]);
+1: curPtr := ref(l2v4z@[4 + 10 * g2076z]);
 2: _(
  _if _not hasDept _then writeln('НЕ ЗАДАНО ПОДРАЗДЕЛЕНИЕ')
  _else _(
  _for i := 0 _to g2076z - 1 _do _(
    l2v2z := 10 * i + 4;
   _if (mysel(l2v4z@[l2v2z].i, 21, (1)) = deptNum) _then _(
-    g2086z := ref(l2v4z@[l2v2z]);
+    curPtr := ref(l2v4z@[l2v2z]);
     EXIT;
   _)
  _);
@@ -1200,31 +1200,30 @@ _(
  TTOUT;
   _);
  g2069z := true;
- _if _not g2067z _then  _GOTO 6334;
+ _if _not batch _then  _GOTO 6334;
   _)
   _end
 _);
 
 _proced L4273(l2a1z:integer);
 _var l2v1z, l2v2z, l2v3z, i:integer;
-l2v5z:@page;
+basePtr:@page;
 l2v6z, l2v7z, l2v8z, l2v9z, l2v10z:integer;
 _(
  L4207( (2) );
  _if g2069z _then  EXIT;
- l2v5z := ptr(64004B);
+ basePtr := ptr(64004B);
  ankNum := (0);
-  _if (annex = (0)) _then _(  l2v6z := (4); l2v7z := (7); l2v10z := g2086z@[2].i _)
-  _else _( l2v6z := (8); l2v7z := 10; l2v10z := g2086z@[3].i _);
+  _if annex = 0 _then _(  l2v6z := (4); l2v7z := (7); l2v10z := curPtr@[2].i _)
+  _else _( l2v6z := (8); l2v7z := 10; l2v10z := curPtr@[3].i _);
  myDBVol :=   mysel( l2v10z, (16), (1) );
 _case l2a1z _of
-  1: _(
- _for l2v1z := l2v6z _to l2v7z _do _for l2v2z := (0) _to 3 _do _(
-   l2v3z := ((12 * l2v2z) + (1));
-   myDBZone :=   mysel(g2086z@[l2v1z].i, (l2v3z + 11), l2v3z );
+  1: _for l2v1z := l2v6z _to l2v7z _do _for l2v2z := (0) _to 3 _do _(
+   l2v3z := 12 * l2v2z + 1;
+   myDBZone :=   mysel(curPtr@[l2v1z].i, l2v3z + 11, l2v3z );
    l2v8z := trunc(myDBZone / 2048);
-   myDBZone := (myDBZone _MOD (2048));
-   _if (myDBZone = (0)) _then _(
+   myDBZone := myDBZone _MOD 2048;
+   _if myDBZone = 0 _then _(
      writeln('НЕТ МЕСТА В БАЗЕ');
      write('ПОД=');
      deptNum := deptNum;
@@ -1233,15 +1232,14 @@ _case l2a1z _of
      TTOUT;
      _GOTO 6334;
    _);
-   _if (l2v8z = (0)) _then _(
-   rdMyZone;
-   _if (annex = (0)) _then _(
-    _if (myZlen < (60)) _then _(  g2085z := ref(l2v5z@[17 * myZlen]); EXIT _);
-  _) _else _(
-    _if (myZlen < 10) _then _(  g2087z := ref(l2v5z@[102 * myZlen]); EXIT _);
-  _)
-  _);
-  _)
+   _if l2v8z = 0 _then _(
+     rdMyZone;
+     _if annex = 0 _then _(
+       _if myZlen < 60 _then _(  mainPtr := ref(basePtr@[17 * myZlen]); EXIT _);
+     _) _else _(
+       _if myZlen < 10 _then _(  otherPtr := ref(basePtr@[102 * myZlen]); EXIT _);
+     _)
+   _);
   _); (* 4410 *)
   2: _(
    _if _not hasFam & _not hasGiven & _not hasPatr & _not hasAnk _then _(
@@ -1249,20 +1247,20 @@ _case l2a1z _of
      _GOTO 6334
    _);
   (a) _for l2v1z := l2v6z _to l2v7z _do  _for l2v2z := (0) _to 3 _do _(
-     l2v3z := ((12 * l2v2z) + (1));
-     myDBZone :=   mysel(g2086z@[l2v1z].i, (l2v3z + 10), l2v3z );
+     l2v3z := 12 * l2v2z + 1;
+     myDBZone :=   mysel(curPtr@[l2v1z].i, (l2v3z + 10), l2v3z );
      _if (myDBZone = (0)) _then _exit a;
      rdMyZone;
     _if (annex = (0)) _then _(
       _for i := (0) _to myZlen - 1_do _(
-        ankNum := (ankNum + (1));
-        g2085z := ref(l2v5z@[17 * i]);
+        ankNum := ankNum + 1;
+        mainPtr := ref(basePtr@[17 * i]);
         _if find _then _(  wr7pck; EXIT _);
       _)
     _) _else _(
     _for i := (0) _to myZlen - 1 _do _(
-      ankNum := (ankNum + (1));
-      g2087z := ref(l2v5z@[102 * i]);
+      ankNum := ankNum + 1;
+      otherPtr := ref(basePtr@[102 * i]);
       _if find  _then  EXIT;
     _)
   _)
@@ -1274,99 +1272,103 @@ _case l2a1z _of
   _end
 _);
 
-_proced L4656(l2a1z:integer);
-_var l2v1z:integer; 
- _proced L4521(l3a1z, l3a2z:integer);
-_var l3v1z, l3v2z, l3v3z, l3v4z:integer;
-l3v5z:char;
+_proced L4656(fldnum:integer);
+_var val:integer; 
+ _proced fillTxt(start, last:integer);
+_var i, pos, cnt, k:integer;
+ch:char;
 _(
- _for l3v1z := l3a1z _to l3a2z _do _(
+ _for i := start _to last _do _(
    allones := allones;
-   l3v4z := ;
-  _if (g2081z = (2)) _then g2085z@[l3v1z].i := l3v4z
-  _else item[l3v1z] := l3v4z;
+   k := ;
+  _if workMode = 2 _then
+    mainPtr@[i].i := k
+  _else
+    item[i] := k;
  _);
- l3v1z := l3a1z;
- l3v2z := (0);
- l3v3z := ;
- _while (INP@ <> '=') & (INP@ <> ',') & (INP@ <> '/') & (INP@ <> etx) _do _(;
- l3v5z := INP@;
+ i := start;
+ pos := 0;
+ cnt := ;
+ _while (INP@ <> '=') & (INP@ <> ',') & (INP@ <> '/') & (INP@ <> etx) _do _(
+ ch := INP@;
  get(INP);
- l3v3z := (l3v3z + (1));
- l3v2z := (l3v2z + (1));
- _if (l3v3z > (((l3a2z - l3a1z) + (1)) * (8))) _then _(  g2070z := true; EXIT _);
- _if (l3v2z > (8)) _then_(  l3v1z := (l3v1z + (1)); l3v2z := (1) _);
- _if (l3v1z > l3a2z) _then _(  g2070z := true; EXIT _);
-  _if (g2081z = (2)) _then g2085z@[l3v1z].i :=  L1514( g2085z@[l3v1z].i, l3v5z)
- _else item[l3v1z] :=   L1514( item[l3v1z], l3v5z );
- _if g2070z _then  EXIT;
+ cnt := cnt + 1;
+ pos := pos + 1;
+ _if cnt > (last - start + 1) * 8 _then _(  hasErr := true; EXIT _);
+ _if pos > 8 _then_(  i := i + 1; pos := 1 _);
+ _if i > last _then _(  hasErr := true; EXIT _);
+  _if workMode = 2 _then mainPtr@[i].i :=  push6( mainPtr@[i].i, ch)
+ _else item[i] :=   push6( item[i], ch );
+ _if hasErr _then  EXIT;
  _);
- _);
+_);
 
-_proced L4625(l3a1z, l3a2z, l3a3z:integer);
+_proced fillBits(idx, hibit, lobit:integer);
  _(
- _if g2070z  _then  EXIT;
-   _if (g2081z = (2)) _then g2085z@[l3a1z].i := myins( g2085z@[l3a1z].i, l2v1z, l3a2z, l3a3z )
-_else  item[l3a1z] :=   myins( item[l3a1z], l2v1z, l3a2z, l3a3z );
+ _if hasErr  _then  EXIT;
+   _if workMode = 2 _then
+     mainPtr@[idx].i := myins( mainPtr@[idx].i, val, hibit, lobit )
+   _else
+     item[idx] := myins( item[idx], val, hibit, lobit );
  _);
 
 _( (* 4656 *)
   skipsp;
-  _case l2a1z _of
-  1: L4521( (1), (3) );
-  2: L4521( (4), (5) );
-  3: L4521( (6), (7) );
-  4: _( l2v1z :=   L2332; L4625( (9), 42, (41) ) _);
-  5: _( l2v1z :=   getDate; L4625( 10, (20), (1) ) _);
-  6: _( l2v1z :=   L2337; L4625( (9), (34), 29 ) _);
-  7: _( l2v1z :=   L2207; L4625( (9), (8), (1) ) _);
-  8: _( l2v1z :=   L2207; L4625( (9), (16), (9) ) _);
-  9: _( l2v1z :=   L2344; L4625( (9), 24, (17) ) _);
-  10:_( l2v1z :=   L2351; L4625( (9), 27, 25 ) _);
-  11:_( l2v1z :=   L2356; L4625( (8), (43), (39) ) _);
-  12:_( l2v1z :=   L2363; L4625( (8), (48), (44) ) _);
-  13:_( l2v1z :=   L2464; L4625( 11, 13, (1) ) _);
-  14:_( l2v1z :=   L2370;
-        l2v1z := ((l2v1z * (16)) +   getNum(10) );
-        L4625( (9), (48), (43) ) _);
-  15: L4521( 14, (17) );
-  16:_( l2v1z :=   L2464; L4625( 11, (36), 14 ) _);
-  17:_( l2v1z :=   getDate; L4625( 10, (40), 21 ) _);
-  18:_( l2v1z :=   L2475; L4625( 12, (48), 27 ) _);
-  19:_( deptNum :=   L2375; l2v1z := ; L4625( 12, 21, (1) );
-        _if _not g2070z _then  hasDept := true _);
-  20:_( l2v1z :=   L2433; L4625( 10, (48), (41) );
-        l2v1z :=   getNum( 10 ); L4625(8, 38, 31) _);
-  21:_( l2v1z :=   L2533; L4625( (8), 30, (1) ) _);
-  22:_( l2v1z :=   L2440; L4625( 11, (46), (44) );
-  _if (l2v1z <= (1)) _then _(
-  L4625( 11, (41), (37) );
-  L4625( 11, (43), 42 );
-  L4625( 11, (48), (47) ); _) _);
-  23:_( l2v1z :=   L2445; L4625( 11, (41), (37) ) _);
-  24:_( l2v1z :=   L2452; L4625( 11, (43), 42 ) _);
-  25:_( l2v1z :=   L2457; L4625( 11, (48), (47) ) _)
+  _case fldnum _of
+  1: fillTxt( (1), (3) );
+  2: fillTxt( (4), (5) );
+  3: fillTxt( (6), (7) );
+  4: _( val :=   L2332; fillBits( (9), 42, (41) ) _);
+  5: _( val :=   getDate; fillBits( 10, (20), (1) ) _);
+  6: _( val :=   L2337; fillBits( (9), (34), 29 ) _);
+  7: _( val :=   L2207; fillBits( (9), (8), (1) ) _);
+  8: _( val :=   L2207; fillBits( (9), (16), (9) ) _);
+  9: _( val :=   L2344; fillBits( (9), 24, (17) ) _);
+  10:_( val :=   L2351; fillBits( (9), 27, 25 ) _);
+  11:_( val :=   L2356; fillBits( (8), (43), (39) ) _);
+  12:_( val :=   L2363; fillBits( (8), (48), (44) ) _);
+  13:_( val :=   L2464; fillBits( 11, 13, (1) ) _);
+  14:_( val :=   L2370;
+        val := ((val * (16)) +   getNum(10) );
+        fillBits( (9), (48), (43) ) _);
+  15: fillTxt( 14, (17) );
+  16:_( val :=   L2464; fillBits( 11, (36), 14 ) _);
+  17:_( val :=   getDate; fillBits( 10, (40), 21 ) _);
+  18:_( val :=   L2475; fillBits( 12, (48), 27 ) _);
+  19:_( deptNum :=   L2375; val := ; fillBits( 12, 21, (1) );
+        _if _not hasErr _then  hasDept := true _);
+  20:_( val :=   L2433; fillBits( 10, (48), (41) );
+        val :=   getNum( 10 ); fillBits(8, 38, 31) _);
+  21:_( val :=   L2533; fillBits( (8), 30, (1) ) _);
+  22:_( val :=   L2440; fillBits( 11, (46), (44) );
+  _if (val <= (1)) _then _(
+  fillBits( 11, (41), (37) );
+  fillBits( 11, (43), 42 );
+  fillBits( 11, (48), (47) ); _) _);
+  23:_( val :=   L2445; fillBits( 11, (41), (37) ) _);
+  24:_( val :=   L2452; fillBits( 11, (43), 42 ) _);
+  25:_( val :=   L2457; fillBits( 11, (48), (47) ) _)
   _end;
-  _if (INP@ <> ',') & _not (INP@ = '/') _then  g2070z := true;
+  _if (INP@ <> ',') & _not (INP@ = '/') _then  hasErr := true;
   _if (INP@ = ',') _then  get(INP);
-  _if (g2070z) _then _(  initCmd; ГГ( g2246z.cmd[l2a1z] ); write('=<ОШИБКА>'); TTOUT _);
+  _if (hasErr) _then _(  initCmd; ГГ( g2246z.cmd[fldnum] ); write('=<ОШИБКА>'); TTOUT _);
 _);
 
 _proced inpAnk(l2a1z:integer);
 _label 5311;
 _var l2v1z, l2v2z, l2v3z, l2v4z:integer; l2v5z :char;
-_proced L5213;
+_proced errMsg;
  _(
- _if g2067z  _then _(
+ _if batch  _then _(
    write(l2v2z:2, dot:1 ); (q) _exit q;
    reset(INP);
    _while _not (INP@ = etx) _do _( write( INP@:1 ); get(INP); _);
    TTOUT;
-   _if (g2081z = (4)) _then _( write('АНКЕТА НЕ ВВЕДЕНА'); TTOUT _);
+   _if (workMode = (4)) _then _( write('АНКЕТА НЕ ВВЕДЕНА'); TTOUT _);
    _GOTO 5311;
  _) _else _(
    write('АНКЕТА НЕ ');
-   _if (g2081z = (1)) _then  write('ВВЕДЕНА') _else  write('ИСПРАВЛЕНА');
+   _if (workMode = (1)) _then  write('ВВЕДЕНА') _else  write('ИСПРАВЛЕНА');
    TTOUT;
    _GOTO 6334;
  _)
@@ -1374,37 +1376,37 @@ _);
 
 _proced report;
  _(
- _if (g2081z = (1)) _then writeln('АНКЕТА ВВЕДЕНА')
- _else _if (g2081z = (2)) _then writeln('АНКЕТА ИСПРАВЛЕНА');
+ _if (workMode = (1)) _then writeln('АНКЕТА ВВЕДЕНА')
+ _else _if (workMode = (2)) _then writeln('АНКЕТА ИСПРАВЛЕНА');
 _);
 
 _( (* inpAnk *)
   rdZKD;
- g2081z := l2a1z;
+ workMode := l2a1z;
  l2v2z := (0);
  l2v3z := ;
-  _if (g2081z = (2)) _then _(  L4273( (2) ); _if g2069z _then  EXIT; _);
+  _if (workMode = (2)) _then _(  L4273( (2) ); _if g2069z _then  EXIT; _);
 5311:
   l2v2z := (l2v2z + (1));
- _if (INP@ = etx) _or g2067z _then  TTIN( (2) );
- _if  (g2081z <> (2)) _then  hasDept := false;
+ _if (INP@ = etx) _or batch _then  TTIN( (2) );
+ _if  workMode <> 2 _then  hasDept := false;
  _if g2071z _then  EXIT;
  skipPrompt;
- _for l2v1z := (1) _to 17 _do item[l2v1z] := (0);
- l2v4z := (0);
- g2070z := false;
+ _for l2v1z := 1 _to 17 _do item[l2v1z] := (0);
+ l2v4z := 0;
+ hasErr := false;
 _while _not (INP@ = '/') & (INP@ <> etx) _do _(
- l2v4z :=   L2065( l2v4z );
- _if g2070z  _then  L5213;
+ l2v4z :=   getField( l2v4z );
+ _if hasErr  _then  errMsg;
  L4656( l2v4z );
- _if g2070z  _then  L5213;
+ _if hasErr  _then  errMsg;
  _);
- _if (INP@ <> '/') _then _(  symErr( '/' ); L5213 _) _else get(INP);
- _if (g2081z <> (2)) _then _( L4273( (1) ); _if g2069z _then  L5213  _);
- _if (g2081z <> (3)) _then _(
- _if (g2081z _IN [1,4]) _then _(
-   _for l2v1z := (1) _to 17 _do g2085z@[l2v1z].i := item[l2v1z];
-   myZlen := (myZlen + (1));
+ _if (INP@ <> '/') _then _(  symErr( '/' ); errMsg _) _else get(INP);
+ _if workMode <> 2 _then _( L4273( (1) ); _if g2069z _then  errMsg  _);
+ _if workMode <> 3 _then _(
+ _if workMode _IN [1,4] _then _(
+   _for l2v1z := 1 _to 17 _do mainPtr@[l2v1z].i := item[l2v1z];
+   myZlen := myZlen + 1;
   pg32ptr@[1].i :=   myins( pg32ptr@[1].i, myZlen, (7), (1) );
   _);
   timeStamp( pg32ptr@[2].i );
@@ -1416,12 +1418,12 @@ _while _not (INP@ = '/') & (INP@ <> etx) _do _(
  l2v5z := INP@;
  _select
   (l2v5z = '/'): _(
-  _if (g2081z = (4)) _then  writeln('ВВЕДЕНО АНКЕТ:', l2v3z:3 );
+  _if (workMode = (4)) _then  writeln('ВВЕДЕНО АНКЕТ:', l2v3z:3 );
   get(INP);
   _);
-  (l2v5z = etx): _if (g2081z <> (2)) _then _goto 5311;
+  (l2v5z = etx): _if (workMode <> (2)) _then _goto 5311;
   (l2v5z = '&'):;
-  true: _( symErr( l2v5z ); _if (g2081z <> (2)) _then _goto 5311 _)
+  true: _( symErr( l2v5z ); _if (workMode <> (2)) _then _goto 5311 _)
 _end
 _);
 
@@ -1438,7 +1440,7 @@ _(
  writeln('ПОДТВЕРДИТЕ <ДА,НЕТ>');
  TTIN( (2) );
  _if INP@ <> 'Д' _then  _GOTO 6334;
- g2067z := true;
+ batch := true;
  _for cur := start _to last _do _(;
  rdpg32( 30B, cur );
  wrpg32( 27B, 0 );
@@ -1459,12 +1461,12 @@ _(
  l2v3z := ptr(((myZlen - (1)) * l2v2z) + (26628));
  _if (annex = (0)) _then_(
    _for l2v1z := (1) _to (17) _do _(
-  g2085z@[l2v1z] := l2v3z@[l2v1z];
+  mainPtr@[l2v1z] := l2v3z@[l2v1z];
   l2v3z@[l2v1z].i := 0;
  _);
   _) _else _(
    _for l2v1z := (1) _to  102 _do _(;
-    g2087z@[l2v1z] := l2v3z@[l2v1z];
+    otherPtr@[l2v1z] := l2v3z@[l2v1z];
     l2v3z@[l2v1z].i := 0;
    _);
   _);
@@ -1482,12 +1484,12 @@ _var l2v1z, l2v2z:integer;
 l2v2a: _array [1..17] _of integer;
 _(
  L4273( (2) );
- _for l2v1z := (1) _to (17) _do l2v2a[l2v1z] := g2085z@[l2v1z].i;
+ _for l2v1z := (1) _to (17) _do l2v2a[l2v1z] := mainPtr@[l2v1z].i;
  l2v2z := deptNum;
  setup( false );
  L4273( (1) );
- _for l2v1z := (1) _to (17) _do g2085z@[l2v1z].i := l2v2a[l2v1z];
-  g2085z@[12].i :=   myins( g2085z@[12].i, deptNum, 21, (1) );
+ _for l2v1z := (1) _to (17) _do mainPtr@[l2v1z].i := l2v2a[l2v1z];
+  mainPtr@[12].i :=   myins( mainPtr@[12].i, deptNum, 21, (1) );
   myZlen := (myZlen + (1));
   pg32ptr@[1].i :=   myins( pg32ptr@[1].i, myZlen, (7), (1) );
   timeStamp( pg32ptr@[2].i );
@@ -1619,7 +1621,7 @@ _(
  sizeof := ord(ref(upto)) - ord(ref(sizeof));
  ЗАПРЕТ := false;
  debug := ;
- g2067z := ;
+ batch := ;
   _if (g12z <> 'ТАМБОВ') _then _(
  initAnk;
  annex := (0);
@@ -1632,20 +1634,20 @@ _(
   _) _else  enter;
  6334:
  timeout;
- g2067z := false;
+ batch := false;
  TTIN( (1) );
  ЗАПРЕТ := false;
  6340:
  g2064z := ;
  g2063z := ;
 6341:
- g2081z := (0);
+ workMode := (0);
  _if (getAlfa( cmd, (3))) _then_(
  _select
   ('СЛУ' = cmd): _(
    _if _not (33 _IN flags) _then _(
     getPasswd( g12z );
-   _if (g12z <> val) _then _(
+   _if (g12z <> valet) _then _(
     writeln('ВАМ НЕЛЬЗЯ');
     ЗАПРЕТ := false;
     rewrite(INP);
