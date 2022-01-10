@@ -27,6 +27,27 @@ _end;
 page= _array[0..1023] _of word;
 sixchars=_array [1..6] _of char;
 arr = _array [1..38] _of word;
+setting = _record
+sizeof:integer;
+ hasDept,
+ hasAnk,
+ hasFam,
+ hasGiven,
+ hasPatr,
+ hasVol,
+ hasZone,
+ hasV2,
+hasZ2:boolean;
+deptNum, ankBeg, ankEnd:integer;
+volNum, zonBeg, zonEnd:integer;
+volN2, zonB2, zonE2:integer;
+famLen,  givLen, patLen: integer;
+famStr:_array[1..24] _of char;
+givStr:_array[1..16] _of char;
+patStr:_array[1..16] _of char;
+show, annex, upto:integer
+_end;
+
 _var cmd:alfa;
 g11z:alfa;
 g12z:alfa;
@@ -59,24 +80,7 @@ g2122z:integer;
 g2123z, g2124z, g2125v:integer;
 g2125z:arr;
 g2164z:bitset;
-sizeof:integer;
- hasDept,
- hasAnk,
- hasFam,
- hasGiven,
- hasPatr,
- hasVol,
- hasZone,
- g2173z,
-g2174z:boolean;
-deptNum, ankBeg, ankEnd:integer;
-g2178z, g2179z, g2180z:integer;
-g2181z, g2182z, g2183z:integer;
-famLen,  givLen, patLen: integer;
-famStr:_array[1..24] _of char;
-givStr:_array[1..16] _of char;
-patStr:_array[1..16] _of char;
-g2243z, annex, upto:integer;
+s:setting;
 g2246z:_record cmd: _array[0..25] _of alfa _end;
 w6:_array [1..5] _of char;
 token:_array[1..20] _of char;
@@ -423,10 +427,9 @@ _);
 _function push6(txt:integer;  l2a2z:char):integer;
 _(
  _if (l2a2z >= 'D') _then _(
-   writeln(l2a2z:1, ' ВВОДИТЬ НЕЛЬЗЯ');
+   code(ИА=); writeln(l2a2z:1, ' ВВОДИТЬ НЕЛЬЗЯ');
    hasErr := true;
    EXIT;
-   (q) _exit q; 
  _);
   code(2СЧ4=СД/-6/,2ЛС5=);
   push6 := ;
@@ -471,19 +474,19 @@ _);
 
  _proced initAnk;
  _(
- hasDept := false;
- hasAnk := ;
- hasFam := ;
- hasGiven := ;
- hasPatr := ;
- hasVol := ;
- hasZone := ;
- g2173z := ;
- g2174z := ;
- g2243z := 0;
- famLen := 0;
- givLen := ;
- patLen := ;
+ s.hasDept := false;
+ s.hasAnk := ;
+ s.hasFam := ;
+ s.hasGiven := ;
+ s.hasPatr := ;
+ s.hasVol := ;
+ s.hasZone := ;
+ s.hasV2 := ;
+ s.hasZ2 := ;
+ s.show := 0;
+ s.famLen := 0;
+ s.givLen := ;
+ s.patLen := ;
  _);
  _proced error;
  _(
@@ -833,7 +836,7 @@ cur, k, i, l3v7z:integer;
 _(
  k := (0);
  _for cur := start _to last _do _(
-   _if annex = 0 _then 
+   _if s.annex = 0 _then 
   l3v1z := mainPtr@[cur].i
    _else
   l3v1z := otherPtr@[cur].i;
@@ -850,9 +853,9 @@ _(
   k := (k + (1));
   len := (len - (1));
   _case start _of
-  1: l3v3z := famStr[k];
-  4: l3v3z := givStr[k];
-  6: l3v3z := patStr[k]
+  1: l3v3z := s.famStr[k];
+  4: l3v3z := s.givStr[k];
+  6: l3v3z := s.patStr[k]
   _end;
  _if l3v2z <> l3v3z _then  _GOTO 3053;
  _if len <= 0 _then  EXIT;
@@ -863,21 +866,21 @@ _);
 
 _( (* find *)
   find := false;
- _if (annex = (0)) _then _(
+ _if (s.annex = (0)) _then _(
    l2v1z :=   L2700( 12, 21, (1) );
- _if (hasDept) _then _(
-   _if _not (l2v1z = deptNum) _then  EXIT;
+ _if (s.hasDept) _then _(
+   _if _not (l2v1z = s.deptNum) _then  EXIT;
   _) _else _(
    l2v1z := l2v1z;
    g12z := ;
   _if _not (g12z = curPtr@[1].a) _then  EXIT;
   _);
   _);
- _if (hasFam) _then  compare( (1), (3), famLen );
- _if (hasGiven) _then  compare( (4), (5), givLen );
- _if (hasPatr) _then  compare( (6), (7), patLen );
- _if hasZone _then _if ((myDBZone < g2179z) _or (myDBZone > g2180z)) _then EXIT;
- _if hasAnk _then _if ((ankNum < ankBeg) _or (ankNum > ankEnd)) _then EXIT;
+ _if (s.hasFam) _then  compare( (1), (3), s.famLen );
+ _if (s.hasGiven) _then  compare( (4), (5), s.givLen );
+ _if (s.hasPatr) _then  compare( (6), (7), s.patLen );
+ _if s.hasZone _then _if ((myDBZone < s.zonBeg) _or (myDBZone > s.zonEnd)) _then EXIT;
+ _if s.hasAnk _then _if ((ankNum < s.ankBeg) _or (ankNum > s.ankEnd)) _then EXIT;
   find := true;
   3053:;
 _);
@@ -909,7 +912,7 @@ _var a:alfa; b:sixchars;
 _(
  mapia(i, a);
  unpck(b[1], a);
-  _for i := 7 - len _to 6 _do _( write(b[i]:1); (q) _exit q; _)
+  _for i := 7 - len _to 6 _do _( (q) write(b[i]:1); _)
 _);
 
 _proced L3156(off2, off1:integer);
@@ -951,7 +954,7 @@ _);
 _proced L3271;
 _var l2v1z, l2v2z, l2v3z, l2v4z, l2v5z, l2v6z, l2v7z:integer;
 _(
- _if (annex = (0)) _then _(
+ _if (s.annex = (0)) _then _(
    l2v6z := (4);
    l2v7z := (7);
    l2v4z := (60);
@@ -1004,25 +1007,25 @@ _(
  i := i + 1;
  _select
   (what = 0) _or (what = 1): _(
- hasFam := true;
- famStr[i] := c;
- famLen := famLen + 1;
+ s.hasFam := true;
+ s.famStr[i] := c;
+ s.famLen := s.famLen + 1;
   _);
   (what = 2): _(
- hasGiven := true;
- givStr[i] := c;
- givLen := givLen + 1;
+ s.hasGiven := true;
+ s.givStr[i] := c;
+ s.givLen := s.givLen + 1;
   _);
   (what = 3): _(
- hasPatr := true;
- patStr[i] := c;
- patLen := patLen + 1;
+ s.hasPatr := true;
+ s.patStr[i] := c;
+ s.patLen := s.patLen + 1;
 _)
   _end
 _);
 _);
 
-_proced L3511;
+_proced show;
 _var l3v1z:integer;
  _proced wrName(what, len:integer);
 _var i:integer; c:char;
@@ -1030,39 +1033,38 @@ _(
   write( sp:1 );
  _for i := 1 _to len _do _(;
     _case what _of
-    1: c := famStr[i];
-    2: c := givStr[i];
-    3: c := patStr[i]
+    1: c := s.famStr[i];
+    2: c := s.givStr[i];
+    3: c := s.patStr[i]
     _end;
-    write( c:1 );
-  (q) _exit q;
+    code(=ИА,);write( c:1 );
  _);
  writeLN;
 _);
 
-  _( (* L3511 *)
- _if hasDept _then _(
+  _( (* show *)
+ _if s.hasDept _then _(
    write(' ПОД = ');
-   deptNum := deptNum;
+   s.deptNum := s.deptNum;
    l3v1z := ;
    wrDept( l3v1z );
    writeLN;
  _);
-    _if hasFam _then _(  write(' ФАМ ='); wrName( (1), famLen ) _);
-    _if hasGiven _then _(  write(' ИМЯ ='); wrName( (2), givLen ) _);
-    _if hasPatr _then _(  write(' ОТЧ ='); wrName( (3), patLen ) _);
-    _if hasAnk _then _(  write(' АНК = '); wrDec( ankBeg );
-      _if (ankEnd <> ankBeg) _then _( write(minus:1); wrDec( ankEnd ) _);
+    _if s.hasFam _then _(  write(' ФАМ ='); wrName( (1), s.famLen ) _);
+    _if s.hasGiven _then _(  write(' ИМЯ ='); wrName( (2), s.givLen ) _);
+    _if s.hasPatr _then _(  write(' ОТЧ ='); wrName( (3), s.patLen ) _);
+    _if s.hasAnk _then _(  write(' АНК = '); wrDec( s.ankBeg );
+      _if (s.ankEnd <> s.ankBeg) _then _( write(minus:1); wrDec( s.ankEnd ) _);
       writeLN;
     _);
- _if hasVol _then _(  write(' БОБ = '); wrDec( g2178z ); writeLN _);
- _if hasZone _then _(  write(' ЗОН = '); wrOctal( g2179z, (4) );
-    _if (g2180z <> g2179z) _then _(  write(minus:1 ); wrOctal( g2180z, (4) ) _);
+ _if s.hasVol _then _(  write(' БОБ = '); wrDec( s.volNum ); writeLN _);
+ _if s.hasZone _then _(  write(' ЗОН = '); wrOctal( s.zonBeg, (4) );
+    _if (s.zonEnd <> s.zonBeg) _then _(  write(minus:1 ); wrOctal( s.zonEnd, (4) ) _);
     writeLN;
   _);
- _if g2173z _then _(  write('*БОБ = '); wrDec( g2181z ); writeLN _);
- _if g2174z _then _(  write('*ЗОН = '); wrOctal( g2182z, (4) );
-   _if g2183z <> g2182z _then _( write(minus:1 ); wrOctal( g2183z, (4) ) _);
+ _if s.hasV2 _then _(  write('*БОБ = '); wrDec( s.volN2 ); writeLN _);
+ _if s.hasZ2 _then _(  write('*ЗОН = '); wrOctal( s.zonB2, (4) );
+   _if s.zonE2 <> s.zonB2 _then _( write(minus:1 ); wrOctal( s.zonE2, (4) ) _);
    writeLN;
  _)
 _);
@@ -1079,8 +1081,8 @@ _( (* setup *)
  _select
   ('БОБ' = g11z): _(
    l2v1z :=   getNum( 10 );
-   _if l2v4z _then _(  g2181z := l2v1z; g2173z := true _)
-   _else _( g2178z := l2v1z; hasVol := true; _)
+   _if l2v4z _then _(  s.volN2 := l2v1z; s.hasV2 := true _)
+   _else _( s.volNum := l2v1z; s.hasVol := true; _)
   _);
   ('ЗОН' = g11z): _(
    l2v2z :=   getNum( (8) );
@@ -1093,49 +1095,49 @@ _( (* setup *)
   true: error
   _end;
   _if _not (l2v3z >= l2v2z) _then  error;
-  _if l2v4z _then _(  g2182z := l2v2z; g2183z := l2v3z; g2174z := true _)
-  _else _( g2179z := l2v2z; g2180z := l2v3z; hasZone := true _)
+  _if l2v4z _then _(  s.zonB2 := l2v2z; s.zonE2 := l2v3z; s.hasZ2 := true _)
+  _else _( s.zonBeg := l2v2z; s.zonEnd := l2v3z; s.hasZone := true _)
   _);
-  ('ПОД' = g11z): _(  deptNum :=   L2375; hasDept := true _);
+  ('ПОД' = g11z): _(  s.deptNum :=   L2375; s.hasDept := true _);
   ('БАЗ' = g11z): _(
    _if (getAlfa( l2v6z, (3))) _then _select
-     ('ДОП' = l2v6z): annex := (1);
-     ('РЕЗ' = l2v6z): annex := (0);
+     ('ДОП' = l2v6z): s.annex := (1);
+     ('РЕЗ' = l2v6z): s.annex := (0);
      true: error
   _end _else  error;
   _);
   ('АНК' = g11z): _(
   _if (getAlfa( l2v6z, (3))) _then _(
-   _if (l2v6z = 'ВСЕ') _then  hasAnk := false _else error;
+   _if (l2v6z = 'ВСЕ') _then  s.hasAnk := false _else error;
   _) _else _(
-   ankBeg :=   getNum( 10 );
-   ankEnd := ;
+   s.ankBeg :=   getNum( 10 );
+   s.ankEnd := ;
   _if (INP@ = '-') _then _(
     get(INP);
-    ankEnd :=   getNum(10 );
-   _if ankEnd < ankBeg _then  error;
+    s.ankEnd :=   getNum(10 );
+   _if s.ankEnd < s.ankBeg _then  error;
   _);
-  hasAnk := true;
+  s.hasAnk := true;
   _)
   _);
   ('ФИО' = g11z): _(
- famLen := (0);
- givLen := ;
- patLen := ;
+ s.famLen := (0);
+ s.givLen := ;
+ s.patLen := ;
  getName( (0) );
  getName( (2) );
  getName( (3) );
   _);
-  ('ФАМ' = g11z): _(  famLen := (0); getName( (1) ) _);
-  ('ИМЯ' = g11z): _(  givLen := (0); getName( (2) ) _);
-  ('ОТЧ' = g11z): _(  patLen := (0); getName( (3) ) _);
+  ('ФАМ' = g11z): _(  s.famLen := (0); getName( (1) ) _);
+  ('ИМЯ' = g11z): _(  s.givLen := (0); getName( (2) ) _);
+  ('ОТЧ' = g11z): _(  s.patLen := (0); getName( (3) ) _);
   ('ПОК' = g11z): _(  4064:
    l2v5z := false;
    write(' БАЗА =');
-   _if (annex = (0)) _then write(' РЕЗИДЕНТНАЯ')
+   _if (s.annex = (0)) _then write(' РЕЗИДЕНТНАЯ')
    _else write(' ДОПОЛНИТЕЛЬНАЯ');
     writeLN;
-    _if _not (g2243z <> (1)) _then  L3511;
+    _if _not (s.show <> (1)) _then  show;
   _);
   ('СБР' = g11z): _(
    l2v5z := false;
@@ -1148,7 +1150,7 @@ _( (* setup *)
    _GOTO 6334;
   _)
   _end;(* 4117 *)
-  _if (g11z <> 'ПОК') & (g11z <> 'СБР') & _not (g11z = 'БАЗ') _then  g2243z := (1);
+  _if (g11z <> 'ПОК') & (g11z <> 'СБР') & _not (g11z = 'БАЗ') _then  s.show := (1);
   _) _else _( (* 4126 *)
    writeln('НЕВЕРНЫЙ ПАРАМЕТР');
    initAnk;
@@ -1168,7 +1170,7 @@ _var i:integer;
 _(
  _for i := 1 _to 7 _do _(
    wrPacked(mainPtr@[i].i);
-  _if (i = 3)_or (i = 5) _then write( sp:1 ); (q) _exit q;
+  _if (i = 3)_or (i = 5) _then code(ИА=); write( sp:1 );
  _);
  writeLN;
 _);
@@ -1183,17 +1185,17 @@ _(
  _case l2a1z _of 
 1: curPtr := ref(l2v4z@[4 + 10 * g2076z]);
 2: _(
- _if _not hasDept _then writeln('НЕ ЗАДАНО ПОДРАЗДЕЛЕНИЕ')
+ _if _not s.hasDept _then writeln('НЕ ЗАДАНО ПОДРАЗДЕЛЕНИЕ')
  _else _(
  _for i := 0 _to g2076z - 1 _do _(
    l2v2z := 10 * i + 4;
-  _if (mysel(l2v4z@[l2v2z].i, 21, (1)) = deptNum) _then _(
+  _if (mysel(l2v4z@[l2v2z].i, 21, (1)) = s.deptNum) _then _(
     curPtr := ref(l2v4z@[l2v2z]);
     EXIT;
   _)
  _);
  write('ПОДРАЗДЕЛЕНИЕ=');
- deptNum := deptNum;
+ s.deptNum := s.deptNum;
  l2v3z := ;
  wrDept( l2v3z );
  write(' НЕ СУЩЕСТВУЕТ');
@@ -1214,7 +1216,7 @@ _(
  _if g2069z _then  EXIT;
  basePtr := ptr(64004B);
  ankNum := (0);
-  _if annex = 0 _then _(  l2v6z := (4); l2v7z := (7); l2v10z := curPtr@[2].i _)
+  _if s.annex = 0 _then _(  l2v6z := (4); l2v7z := (7); l2v10z := curPtr@[2].i _)
   _else _( l2v6z := (8); l2v7z := 10; l2v10z := curPtr@[3].i _);
  myDBVol :=   mysel( l2v10z, (16), (1) );
 _case l2a1z _of
@@ -1226,7 +1228,7 @@ _case l2a1z _of
    _if myDBZone = 0 _then _(
      writeln('НЕТ МЕСТА В БАЗЕ');
      write('ПОД=');
-     deptNum := deptNum;
+     s.deptNum := s.deptNum;
      l2v9z := ;
      wrDept( l2v9z );
      TTOUT;
@@ -1234,7 +1236,7 @@ _case l2a1z _of
    _);
    _if l2v8z = 0 _then _(
      rdMyZone;
-     _if annex = 0 _then _(
+     _if s.annex = 0 _then _(
        _if myZlen < 60 _then _(  mainPtr := ref(basePtr@[17 * myZlen]); EXIT _);
      _) _else _(
        _if myZlen < 10 _then _(  otherPtr := ref(basePtr@[102 * myZlen]); EXIT _);
@@ -1242,7 +1244,7 @@ _case l2a1z _of
    _);
   _); (* 4410 *)
   2: _(
-   _if _not hasFam & _not hasGiven & _not hasPatr & _not hasAnk _then _(
+   _if _not s.hasFam & _not s.hasGiven & _not s.hasPatr & _not s.hasAnk _then _(
      writeln('НЕ ЗАДАНА АНКЕТА');
      _GOTO 6334
    _);
@@ -1251,7 +1253,7 @@ _case l2a1z _of
      myDBZone :=   mysel(curPtr@[l2v1z].i, (l2v3z + 10), l2v3z );
      _if (myDBZone = (0)) _then _exit a;
      rdMyZone;
-    _if (annex = (0)) _then _(
+    _if (s.annex = (0)) _then _(
       _for i := (0) _to myZlen - 1_do _(
         ankNum := ankNum + 1;
         mainPtr := ref(basePtr@[17 * i]);
@@ -1335,8 +1337,8 @@ _( (* 4656 *)
   16:_( val :=   L2464; fillBits( 11, (36), 14 ) _);
   17:_( val :=   getDate; fillBits( 10, (40), 21 ) _);
   18:_( val :=   L2475; fillBits( 12, (48), 27 ) _);
-  19:_( deptNum :=   L2375; val := ; fillBits( 12, 21, (1) );
-        _if _not hasErr _then  hasDept := true _);
+  19:_( s.deptNum :=   L2375; val := ; fillBits( 12, 21, (1) );
+        _if _not hasErr _then  s.hasDept := true _);
   20:_( val :=   L2433; fillBits( 10, (48), (41) );
         val :=   getNum( 10 ); fillBits(8, 38, 31) _);
   21:_( val :=   L2533; fillBits( (8), 30, (1) ) _);
@@ -1360,7 +1362,7 @@ _var l2v1z, l2v2z, l2v3z, l2v4z:integer; l2v5z :char;
 _proced errMsg;
  _(
  _if batch  _then _(
-   write(l2v2z:2, dot:1 ); (q) _exit q;
+   code(ИА=); write(l2v2z:2, dot:1 );
    reset(INP);
    _while _not (INP@ = etx) _do _( write( INP@:1 ); get(INP); _);
    TTOUT;
@@ -1389,7 +1391,7 @@ _( (* inpAnk *)
 5311:
   l2v2z := (l2v2z + (1));
  _if (INP@ = etx) _or batch _then  TTIN( (2) );
- _if  workMode <> 2 _then  hasDept := false;
+ _if  workMode <> 2 _then  s.hasDept := false;
  _if g2071z _then  EXIT;
  skipPrompt;
  _for l2v1z := 1 _to 17 _do item[l2v1z] := (0);
@@ -1457,9 +1459,9 @@ _var l2v1z:integer; l2v2z:integer; l2v3z:@arr;
 _(
  setup( false );
  L4273( (2) );
- _if (annex = (0)) _then  l2v2z := 17 _else l2v2z := 102;
+ _if (s.annex = (0)) _then  l2v2z := 17 _else l2v2z := 102;
  l2v3z := ptr(((myZlen - (1)) * l2v2z) + (26628));
- _if (annex = (0)) _then_(
+ _if (s.annex = (0)) _then_(
    _for l2v1z := (1) _to (17) _do _(
   mainPtr@[l2v1z] := l2v3z@[l2v1z];
   l2v3z@[l2v1z].i := 0;
@@ -1485,16 +1487,16 @@ l2v2a: _array [1..17] _of integer;
 _(
  L4273( (2) );
  _for l2v1z := (1) _to (17) _do l2v2a[l2v1z] := mainPtr@[l2v1z].i;
- l2v2z := deptNum;
+ l2v2z := s.deptNum;
  setup( false );
  L4273( (1) );
  _for l2v1z := (1) _to (17) _do mainPtr@[l2v1z].i := l2v2a[l2v1z];
-  mainPtr@[12].i :=   myins( mainPtr@[12].i, deptNum, 21, (1) );
+  mainPtr@[12].i :=   myins( mainPtr@[12].i, s.deptNum, 21, (1) );
   myZlen := (myZlen + (1));
   pg32ptr@[1].i :=   myins( pg32ptr@[1].i, myZlen, (7), (1) );
   timeStamp( pg32ptr@[2].i );
  wrmyDB;
- deptNum := l2v2z;
+ s.deptNum := l2v2z;
  erase;
  initAnk;
  stats( (6) );
@@ -1504,16 +1506,16 @@ _proced save;
 _var l2v1z:@page; l2v2z:integer;
 _(
  l2v2z := (0);
- l2v1z := ref(sizeof);
- _for l2v2z := (1) _to sizeof _do pg32ptr@[l2v2z] := l2v1z@[l2v2z];
+  l2v1z := ref(s.sizeof);
+  _for l2v2z := (1) _to s.sizeof _do pg32ptr@[l2v2z] := l2v1z@[l2v2z];
 _);
 
  _proced restore;
 _var l2v1z:@page; l2v2z:integer;
 _(
  l2v2z := (0);
- l2v1z := ref(sizeof);
- _for l2v2z := (1) _to sizeof _do  l2v1z@[l2v2z] := pg32ptr@[l2v2z];
+  l2v1z := ref(s.sizeof);
+  _for l2v2z := (1) _to s.sizeof _do  l2v1z@[l2v2z] := pg32ptr@[l2v2z];
  _);
 
 _proced L5764;
@@ -1575,7 +1577,7 @@ _procedure L6154(_var f:text; _var i:integer; j:integer); _( code(ПБ76021=,); 
  reset(INP);
  _if _not (2 _IN flags) _then _(
    initAnk;
-   annex := (0);
+   s.annex := (0);
    writeln(ornament:18, '  ВЫ ВОШЛИ В СЛУЖЕБНЫЙ БЛОК   ', ornament);
  _) _else  restore;
  flags := flags - [2];
@@ -1618,13 +1620,13 @@ _(
  g2089z := ;
  code(Э05310=,);
  begTime := ;
- sizeof := ord(ref(upto)) - ord(ref(sizeof));
+ s.sizeof := ord(ref(s.upto)) - ord(ref(s.sizeof));
  ЗАПРЕТ := false;
  debug := ;
  batch := ;
   _if (g12z <> 'ТАМБОВ') _then _(
  initAnk;
- annex := (0);
+ s.annex := (0);
  writeln('-=  ОТЛАДКА  =-');
  prnEnable := false;
  g2122z := (1);
